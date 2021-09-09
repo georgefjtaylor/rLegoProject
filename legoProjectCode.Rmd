@@ -1,0 +1,242 @@
+---
+Title: "INST0065 Assessment 2"
+Module Leader: "Dr Oliver Duke-Williams"
+Student ID: "20165543"
+Date: "4/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE, results = 'hide'}
+library(devtools)
+library(tidyverse) # CSV file I/O, e.g. the read_csv function
+library(RColorBrewer)
+library(plotly) #hex to RGB conversion
+#machinelearning
+library(caret)
+#text
+library(tidytext)
+library(spacyr)
+library(dplyr)
+library(ggplot2)
+library(hrbrthemes)
+library(viridis)
+library(ggthemr)
+library(gganimate)
+
+devtools::install_github('cttobin/ggthemr')
+```
+
+# INST0065 Assessment 2
+### Student ID: 20165543
+### Module Leader: Dr Oliver Duke-Williams
+### Word Count: 2000
+
+### Preface
+To run this r file and its respective packages, the author needs to install devtools. The code required to do so has been included, but the author may need to restart R if the tools are not already installed.
+
+## Introduction
+Lego is a popular toy brand. They make building blocks. These blocks are commonly sold in sets, as to build a specific thing or place. The blocks vary in shape and colour. The data for this investigation concerns 12 csv files from [https://rebrickable.com/downloads/](rebrickable.com). These files contain various information about officially released Lego sets.The information covers not only what pieces are contained in each set, but also, the year the sets were released, the colours of the individual blocks, and more. The data was originally created to show people how they could make other Lego sets from the ones they already had (Rebrickable 2021). 
+
+The data is structured in an interesting way, as evident from the 12 separate files. For example, to get the colours of bricks used within sets, as will be covered in visualisation two, we must merge multiple sets; in the extrapolation of meaningful results, the data will need to be manipulated.
+
+```{r load-data, include=FALSE, results = 'hide'}
+# include=FALSE means that code will run, but results will not be shown
+
+# This section loads all the data; you do not need to use all tables
+
+# NB This section uses read_csv(), which is included in tidyverse 
+invent <- read_csv("https://cdn.rebrickable.com/media/downloads/inventories.csv.gz")
+
+
+inventSets <- read_csv("https://cdn.rebrickable.com/media/downloads/inventory_sets.csv.gz")
+sets <- read_csv("https://cdn.rebrickable.com/media/downloads/sets.csv.gz")
+themes <- read_csv("https://cdn.rebrickable.com/media/downloads/themes.csv.gz")
+
+inventMinifig <- read_csv("https://cdn.rebrickable.com/media/downloads/inventory_minifigs.csv.gz")
+minifigs <- read_csv("https://cdn.rebrickable.com/media/downloads/minifigs.csv.gz")
+
+inventParts <- read_csv("https://cdn.rebrickable.com/media/downloads/inventory_parts.csv.gz")
+parts <- read_csv("https://cdn.rebrickable.com/media/downloads/parts.csv.gz")
+colours <- read_csv("https://cdn.rebrickable.com/media/downloads/colors.csv.gz")
+elements <- read_csv("https://cdn.rebrickable.com/media/downloads/elements.csv.gz")
+partCatagories <- read_csv("https://cdn.rebrickable.com/media/downloads/part_categories.csv.gz")
+partRels <- read_csv("https://cdn.rebrickable.com/media/downloads/part_relationships.csv.gz")
+```
+<!-- VIS One -->
+# Visualization One
+The first visualization aims to elucidate a progression in the average number of parts per Lego set, across Lego history. The primary research hypothesis here is that: the average number of Lego parts per set, has increased steadily with time due to production costs/availability and, various other economic factors.
+
+```{r partsPerYear}
+#Create a new table with the average parts of each distinct year
+ggthemr("dust")
+avgParts <- sets %>%
+   group_by(year) %>%
+   summarise(avgParts = mean(num_parts),
+             numParts = n())
+
+#Plot using ggplot2; bar chart where x is the year and y is the number of average parts
+p <- ggplot(avgParts, aes(x=year, y=avgParts, fill=year)) + 
+  geom_bar(stat = "identity")+labs(title="Lego Parts Per Year", x="Years 1950-2021", y="Average Parts",subtitle = "Average Lego Parts Per Year 1949-2021",
+caption = "source: rebrickable.com/media/downloads/")
+
+#Visualization styling
+p + theme(
+plot.title = element_text(color="#000000", size=12, face="bold"),
+plot.subtitle = element_text(color="#000000", size=8, face="bold"),
+axis.title.x = element_text(color="#000000", size=8, face="bold"),
+axis.title.y = element_text(color="#000000", size=8, face="bold")
+)
+```
+
+<br>
+
+### Method
+The sets csv file contains the information needed to get the average number of parts per year. This file contains the number of parts in each set and the year that they were released. To create the average number of parts per year we can taking an average mean (summarise/mean R functions) of the number of parts per distinct year (group_by).
+
+We can plot the results of our new data-frame (avgParts), on a bar chart (figure one). Here, X is the year and Y is average number of parts.
+
+### Analysis
+There is a positive correlation between time and average parts in sets; as time progresses, the average number of parts per set increases. These findings support my initial hypothesis. However, the average number of parts in sets from 1960, are similar to those from 2008-2021. This suggests that the reason for the average amount of parts per set, is likely not due to the historical progression of production of resources. Rather, there is another reason, that is not yet apparent.
+
+The outliers are interesting: 1949, 2020 and, as mentioned, 1960. We can trace the 1960 outlier to a particular historical event; the launch of Lego in Great Britain (Huw 2014). In 1949, Lego made one of their first moves to a borad market (ibid.,).
+
+### Reflection & Criticism
+To yield meaningful results, the data had to be manipulated by calculating averages. If we did not do this, there would be too many data-points. While taking an average creates better readability, it endeavors to reduce overall accuracy; an average will always render the full scale obsolete. For example, in 2000, there may have only been two sets released: one with 25 parts and one with 125 parts.  The average would come to 75. This is hardly representative of the actual results (if that is what one was aiming to represent). This choice of data manipulation, to take the average of each set across time, articulates the contentious dichotomy between visual digestibility and representativeness. In order to better visualise results, the quality of the data may suffer.
+
+A further visualisation would be to map all of the sets and their respective number of parts, as dots, across time. Another investigation could examine the relationship between the number of parts and specific themes, particularly, in relation to gender: do sets aimed at boys have more parts than those aimed at girls? One could also examine the most popular themes, across time. That is, what themes are released consistently? This could ecludiate patterns in Lego history and marketing strategies.
+
+<!-- VIS TWO -->
+# Visualization Two
+This second visualisation shows the colours used in Lego sets, across time, on a stacked bar chart; individual segments are the hex values used. I hypothesise that the number of colours used will progress steadily, across time.
+
+```{r hexConvert}
+# Make hex values readable by adding a # with regex
+colours$rgb <- sub("^", "#", colours$rgb)
+```
+
+```{r paletteToRgb}
+# Create new object with only the colour names
+allColours <- colours$rgb
+names(allColours) <- allColours
+```
+
+```{r coloursPerYear}
+#Create new dataframe / merge data together to get each individual colour used in each year
+ggthemr("dust")
+tickX <- seq(1950, 2021, by = 5)
+coloursPerYear <- sets %>% merge(invent, by = c("set_num")) %>%
+                  merge(inventParts, by.x="id", by.y="inventory_id") %>%
+                  merge(colours, by.x="color_id", by.y="id") %>%
+                        select(year, rgb, quantity) %>%
+                        group_by(rgb, year) %>%
+                        summarize(total = sum(quantity))
+
+#Plot the individual colours on a bar chart; whereby bars are stacked according to colours
+coloursPerYear %>% ggplot(aes(x = year, fill = rgb, width = 0.8)) + 
+          geom_bar() + 
+          scale_fill_manual(values = allColours) +
+          scale_x_discrete(limits = tickX) +
+           labs(
+            x = "Year", 
+            y = "No. of Colours", 
+            title = "Lego Colours",
+            subtitle = "Distinct Lego Colours Per Year 1949-2021",
+            caption = "source: rebrickable.com/media/downloads/"
+            )  +
+          theme(
+                legend.position = "none",
+                axis.ticks.y=element_blank()
+                )
+```
+<br>
+
+### Method
+To visualise this data, we need to combine multiple sets. The colours and their respective ID's are contained within a csv file  (colours.csv). The colour for the hex values is structured using VARCHAR: xxxxxx. To make these values readable to alter plot on a graph, they need to have a # in front of them. Using regex, in the function r hexConvert, we can append a hash to the beginning of each row in the RGB column.
+
+The next task is create a new value object, with all the district colours (r paletteToRgb). This object is needed to plot each distinct colour on the graph, otherwise, it would be a non-representative gradient.
+
+Now, we can merge the dataframes: invent, inventParts and, colours. We are looking for three columns: year, rgb and, quantity. The data needs to be merged to get the information for colours and their relationship to the respective sets. Upon merging the data, we can group it by the hex values of each year. Then, make the output distinct by summarising the quantity, giving us distinct colours, across all sets, across time.
+
+We can plot the final dataframe, and display the distinct colours used in each year, with a stacked barchart. Here, X is the year and Y is the number of colours. Each segment of the bar is the distinct colour present. Then, we use the predefined value object allColours, along with the function: scale_fill_manual to plot the colours.
+
+### Analysis
+The visualisation supports my proposed hypothesis: there is a broad correlation between time and the amount of colours used in Lego sets. We see exponential growth of colours in the 1990s. This peaks between 2000 to 2008, reaching an apex of 91 colours in 2005. From 2007 to 2021, the amount of colours remains around 60. While there is a general increase, the graph is skewed right.
+
+This noticeable decline and then steady progression may speak to the trends in overall Lego history. One could draw an inverse correlation between the number of colours and the success of the company. In 1992 to 2004, the Lego company went into decline, posting their first ever loss of £23 million in 1998 and subsequently laying off 1000 employees (Craig McLean 2009). In 2004 the CEO Kjeld Kirk Kristiansen resigned and the company appointed Jørgen Vig Knudstorp (ibid.,). From 2005, the company has recovered, focusing on their basic line of products and relaunching the duplo label. The company further moved manufacturing to Mexico and distribution from Billund to the Czech Republic (Schwartz 2009).
+
+While correlation does not prove causation, this historical progression appears to be linked to the number of colours. We see that in the 'decline years', between 1992 and 2004, the number of colours used in Lego sets increases exponentially. Then, during Legos' 'recovery' after 2005, the amount of colours declines and remains steadily around 600. 
+
+Another noticeable pattern is that, in the 1990s, pink and purple hues are much more prominent. This could be attributed to Lego's marketing strategy, appealing to female audiences (Jens Hansegard 2015). We can use this graph to criticize Lego as a company. In 1981 Lego was  gender neutral, the importance was placed on the creativity and imagination of the child. After the 2000s, the toys become gendered with pink and purple hues and specific set designs (Madrid 2015). However, today, Lego is progressing again towards gender neutral marketing, releasing female mini-figures in STEM roles (ibid.,).
+
+### Reflection & Criticism
+The second visualization may be potentially difficult to interpret, if one did not have the contextual information surrounding it. A possible improvement, to aid in visual digestibility, would be to sort the colours by saturation. This would make initial inference more obvious, guiding the viewers eye.
+
+Another criticism is based on my own assumption. Namely, that the appearance of pink and purple hues are associated with Lego themes aimed at girls. While this is intuitively true, we would need to visualise the sets and their respective colours themselves to be sure. This presents potential for further research; assessing the colours in gendered Lego sets, across time.
+
+<!-- VIS Three -->
+# Visualization Three
+The following visualizations aim to show the numeric progression of specific 'gendered' lego sets, across time. Here, the Y axis will be the number of sets and X will be the year.
+
+I have chosen _Bionicles_ and, _Disney Princesses_. My hypothesis, following the findings from visualisation two, is that there will be a correlation between the 'feminine' theme(s) and time. That is to say, as time progresses, the number of feminine themed sets will increase. Further, I will use a presumably gender neutral theme, City, as validation. Inevitably, there are limitations with my proposed methodology and, presuppositions in regards to gender. These will be covered in the section on reflections.
+
+```{r mergeCSV}
+#merge csv files
+#create df obj equal to name and count of distinct years.
+theme <- sets %>% merge(themes, by.x="theme_id", by.y="id")
+theme_with_count<-theme%>%group_by(year, name.y)%>%transmute(count=n()) %>% distinct(name.y, .keep_all = TRUE)
+```
+
+```{r genderedThemes}
+#set ggthemr theme
+ggthemr("dust")
+#create new table grouping sets by name, year of release and count numbers of releases. 
+#Filter by "Bionicle", "Disney Princess" and, "city".
+
+#Filter the theme df further to get specific themes.
+themePlot<-theme_with_count %>% filter(name.y=='Disney Princess'| name.y=='Bionicle' | name.y=='City')
+
+#Plot the data; use group to plot multiple lines and colour as the name variables to auto assign colours.
+ggplot(themePlot, aes(x=year, y=count, group=name.y, color=factor(name.y)))+geom_line()+scale_colour_ggthemr_d()+geom_point()+
+            labs(
+            x = "Year",
+            y = "Count",
+            title = "Gendered Lego Sets",
+            color = "Theme Name",
+            subtitle = "Comparing Gendered Lego Sets Across Time: 1949-2021",
+            caption = "source: rebrickable.com/media/downloads/"
+            )
+```
+<br>
+
+
+### Method
+Akin to the previous visualization, data manipulation is required (r mergeCSV). Here, we merge the themes and sets csv files to get a range of information: the names of the themes and the year that they were released. Upon completing this merge and assigning it to a new dataframe object (theme), we can then filter the object further. In this process, we create a new dataframe, equal to the distinct years and themes, as well as a new column with a count of the number of sets released under each theme. We now have a dataframe object (theme_with_count) with the number of sets released per year for each theme.
+
+When plotting the data (r genderedThemes), we can filter the data further. The frame  (themePlot) filters only the themes we are interested in: Bionicle, Disney Princesses and, City.
+
+We plot the data using ggplot along with the geom_line attribute. To plot multiple lines and have them display different colours, we specify a group of data, name.y (the name of the themes). Similarly, to assign colours we use colour=variable (name.y). Here, because we are using a custom ggthemr, we must include the attribute: scale_colour_ggthemr_d(), to allow the automatic assigning of colours to each line.
+
+### Analysis
+The graph shows interesting patterns. The Disney Princess theme trends upwards, across time, but decreased significantly in 2021. Bionicle also increased, but, in line with Lego history, was stopped after 2016. Both themes' overall trends are very similar to the 'gender neutral' Lego City theme; steadily increasing with time. As such, my results deny a correlation between time and specific gendered themes, as validated using a controlled variable; a gender neutral theme.
+
+The notion of Lego sets aimed at specific genders, in and of itself, ought to be examined. In recent years, Lego has come under criticism for its marketing strategies (Castella 2014). Specifically, _Lego Friends_, the theme we have visualised. The theme details women who live in a fictional countryside that go to salons, vets, have a swimming pool and convertible cars (Samakow 2014, Castella 2014). Critics attacked the pastel colour scheme, along with the life of leisure depicted. Since then, Lego has introduced a number of more appealing sets that include women, namely, female scientists (Castella 2014).
+
+### Reflection & Criticism
+The underlying correlation I proposed in the introduction appears to be absent or, at least, my proposed methodology is not suitable to examine it. A better way to assess gender in Lego would be to look at, as noted in a previous section, the colours used in sets: are the sets aimed at girls predominantly pink and purple, and does this differ to those aimed at boys? This would provide an empirical means to examine gender in Lego.
+
+## Bibliography
+Castella, Tom. (2014). How did Lego become a gender battleground? The BBC. https://www.bbc.co.uk/news/magazine-28660069
+
+Huw. (2014). Brickset. https://brickset.com/article/12576/british-lego-ltd-the-early-years-(1960-65)
+
+Jens Hansegard. (2015). Wall Street Journal. https://www.wsj.com/articles/lego-builds-stronger-ties-to-girls-1451420979
+
+Madrid, Isis. (2015).From gender neutral beginnings to pink princess themes and today's female STEM minifigs: LEGO's messy history of marketing to girls. The World. https://www.pri.org/stories/2015-07-02/gender-neutral-beginnings-pink-princess-themes-and-todays-female-stem-minifigs
+
+McLean, Craig. (2009). "Lego: play it again". The Telegraph. Retrieved 25 July 2014. https://www.telegraph.co.uk/finance/newsbysector/retailandconsumer/6825911/Lego-play-it-again.html
+
+Samakow, Jessica. (2014). LEGO Ad From 1981 Should Be Required Reading For Everyone Who Makes, Buys Or Sells Toys. Huffington Post. https://www.huffingtonpost.co.uk/entry/lego-ad-1981_n_4617704
+
+Schwartz, Nelson D. (2009). "Turning to Tie-Ins, Lego Thinks Beyond the Brick". The New York Times. https://www.nytimes.com/2009/09/06/business/global/06lego.html
+
+
